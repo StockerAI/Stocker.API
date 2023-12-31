@@ -96,5 +96,49 @@ def get_stocks():
 
     return jsonify(stocks_list)
 
+from flask import request, jsonify
+from sqlalchemy import select
+from datetime import datetime
+
+@app.route('/get_company_details', methods=['GET'])
+def get_company_details():
+    company_details_table = db.Model.metadata.tables['CompanyDetails']
+    tickers_table = db.Model.metadata.tables['Tickers']
+
+    # Get the ticker_name query parameter as a list
+    ticker_list = request.args.getlist('ticker_name')
+
+    # Columns to exclude
+    columns_to_exclude = set([
+        'tickerId',
+        'companyDetailsId',
+        # ... other columns to exclude
+    ])
+
+    # Dynamically determine columns to select
+    columns_to_select = [
+        column for column in company_details_table.c if column.name not in columns_to_exclude
+    ]
+
+    # Add tickerName from tickers_table
+    columns_to_select.append(tickers_table.c.tickerName)
+
+    # Construct the SELECT statement with necessary joins and filters
+    if ticker_list:
+        select_statement = select(columns_to_select).select_from(
+            company_details_table.join(tickers_table, company_details_table.c.tickerId == tickers_table.c.tickerId)
+        ).where(tickers_table.c.tickerName.in_(ticker_list))
+    else:
+        select_statement = select(columns_to_select).select_from(
+            company_details_table.join(tickers_table, company_details_table.c.tickerId == tickers_table.c.tickerId)
+        )
+
+    # Execute the query and fetch the results
+    with db.engine.connect() as connection:
+        result = connection.execute(select_statement)
+        company_details_list = [dict(row) for row in result]
+
+    return jsonify(company_details_list)
+
 if __name__ == '__main__':
     app.run(debug=True)
