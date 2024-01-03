@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import select
+from sqlalchemy import select, and_
 from datetime import datetime
 from config import config  # Make sure this import is correct and the config file exists
 
@@ -54,6 +54,7 @@ def get_stocks():
 
     # Get query parameters
     ticker_list = request.args.getlist('ticker_name')
+    stock_market_list = request.args.getlist('stock_market_name')
     starting_date = request.args.get('starting_date')
     ending_date = request.args.get('ending_date')
 
@@ -74,9 +75,10 @@ def get_stocks():
         stocks_table.join(tickers_table, stocks_table.c.tickerId == tickers_table.c.tickerId)
     )
 
-    # Apply ticker name filter if provided
-    if ticker_list:
-        query = query.where(tickers_table.c.tickerName.in_(ticker_list))
+    # Apply ticker name and stock market filters if provided
+    if ticker_list and stock_market_list:
+        query = query.where(and_(tickers_table.c.tickerName.in_(ticker_list), 
+                                tickers_table.c.stockMarket.in_(stock_market_list)))
 
     # Apply date range filters if provided
     if starting_date:
