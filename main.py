@@ -96,10 +96,6 @@ def get_stocks():
 
     return jsonify(stocks_list)
 
-from flask import request, jsonify
-from sqlalchemy import select
-from datetime import datetime
-
 @app.route('/get_company_details', methods=['GET'])
 def get_company_details():
     company_details_table = db.Model.metadata.tables['CompanyDetails']
