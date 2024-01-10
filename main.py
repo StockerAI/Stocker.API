@@ -15,23 +15,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# Function to test the database connection
-def test_db_connection():
-    with app.app_context():
-        try:
-            # Using text() to construct a textual SQL statement
-            sql_query = text("SELECT version();")
-            with db.engine.connect() as connection:
-                result = connection.execute(sql_query)
-                for row in result:
-                    print("Database version:", row[0])
-                print("Database connection established successfully.")
-        except SQLAlchemyError as e:
-            print("Error occurred during database connection:", str(e))
-
-# Call this function to test the DB connection
-test_db_connection()
-
 def reflect_db():
     with app.app_context():
         db.Model.metadata.reflect(db.engine)
